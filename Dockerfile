@@ -1,0 +1,21 @@
+FROM gradle:6.7.0-jdk11 as builder
+
+COPY --chown=gradle:gradle . /home/gradle/src
+WORKDIR /home/gradle/src
+RUN gradle build
+
+FROM tomcat:8-jdk12-openjdk-oracle
+
+RUN rm -rf /usr/local/tomcat/webapps/ROOT
+RUN rm -rf /usr/local/tomcat/webapps/docs
+RUN rm -rf /usr/local/tomcat/webapps/examples
+RUN rm -rf /usr/local/tomcat/webapps/host-manager
+RUN rm -rf /usr/local/tomcat/webapps/manager
+
+COPY --from=builder /home/gradle/src/build/libs/campaign-0.0.1-SNAPSHOT.war /usr/local/tomcat/webapps/ROOT.war
+
+EXPOSE 8080
+
+CMD chmod +x /usr/local/tomcat/bin/catalina.sh
+
+CMD catalina.sh run
